@@ -3,9 +3,9 @@ using OrderManagementSystem.Models;
 
 namespace OrderManagementSystem.Repositories.Repository
 {
-    public class UserRepository : Repository<User>
+    public class InvoiceRepository : Repository<Invoice>
     {
-        public UserRepository(OrderManagementDbContext context) : base(context) { }
+        public InvoiceRepository(OrderManagementDbContext context) : base(context) { }
         
     }
 }

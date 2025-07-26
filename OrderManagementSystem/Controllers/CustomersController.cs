@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using OrderManagementSystem.Data;
 using OrderManagementSystem.Models;
+using OrderManagementSystem.Repositories.Repository;
 
 namespace OrderManagementSystem.Controllers
 {
@@ -10,24 +11,39 @@ namespace OrderManagementSystem.Controllers
     [Route("api/customers")]
     public class CustomersController : ControllerBase
     {
-        private readonly OrderManagementDbContext _context;
-        public CustomersController(OrderManagementDbContext context) => _context = context;
+        private readonly CustomerRepository _customerRepo;
+        private readonly OrderRepository _orderRepo;
+
+        public CustomersController(CustomerRepository customerRepo, OrderRepository orderRepo)
+        {
+            _customerRepo = customerRepo;
+            _orderRepo = orderRepo;
+        }
 
         [HttpPost]
-        public async Task<IActionResult> Create(Customer customer)
+        public async Task<IActionResult> Create([FromQuery] string name, [FromQuery] string email)
         {
-            _context.Customers.Add(customer);
-            await _context.SaveChangesAsync();
-            return Ok(customer);
+            if (string.IsNullOrWhiteSpace(name) || string.IsNullOrWhiteSpace(email))
+            {
+                return BadRequest("Name and Email are required.");
+            }
+
+            var newCustomer = new Customer
+            {
+                Name = name,
+                Email = email
+            };
+
+            await _customerRepo.AddAsync(newCustomer);
+            await _customerRepo.SaveChangesAsync();
+
+            return Ok(newCustomer);
         }
 
         [HttpGet("{customerId}/orders")]
         public async Task<IActionResult> GetCustomerOrders(int customerId)
         {
-            var orders = await _context.Orders
-                .Where(o => o.CustomerId == customerId)
-                .Include(o => o.OrderItems)
-                .ToListAsync();
+            var orders = await _orderRepo.FindAsync(o => o.CustomerId == customerId);
             return Ok(orders);
         }
     }

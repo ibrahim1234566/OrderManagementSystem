@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using OrderManagementSystem.Data;
+using OrderManagementSystem.Repositories.Repository;
 
 namespace OrderManagementSystem.Controllers
 {
@@ -10,14 +11,18 @@ namespace OrderManagementSystem.Controllers
     [Route("api/invoices")]
     public class InvoicesController : ControllerBase
     {
-        private readonly OrderManagementDbContext _context;
-        public InvoicesController(OrderManagementDbContext context) => _context = context;
+        private readonly InvoiceRepository _invoiceRepo;
+
+        public InvoicesController(InvoiceRepository invoiceRepo)
+        {
+            _invoiceRepo = invoiceRepo;
+        }
 
         [Authorize(Roles = "Admin")]
         [HttpGet("{invoiceId}")]
         public async Task<IActionResult> Get(int invoiceId)
         {
-            var invoice = await _context.Invoices.FindAsync(invoiceId);
+            var invoice = await _invoiceRepo.GetByIdAsync(invoiceId);
             return invoice == null ? NotFound() : Ok(invoice);
         }
 
@@ -25,7 +30,7 @@ namespace OrderManagementSystem.Controllers
         [HttpGet]
         public async Task<IActionResult> GetAll()
         {
-            return Ok(await _context.Invoices.ToListAsync());
+            return Ok(await _invoiceRepo.GetAllAsync());
         }
     }
 }
